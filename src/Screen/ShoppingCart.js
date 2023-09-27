@@ -1,5 +1,5 @@
 import React, { useState,useEffect } from 'react'
-import {Text,View, TouchableOpacity , Modal ,  Switch,   StyleSheet ,Image  ,TextInput,FlatList} from 'react-native'
+import {Text,View, TouchableOpacity , Modal ,  Switch,   StyleSheet ,Image  ,TextInput, ToastAndroid ,FlatList} from 'react-native'
 import _Header from '../components/_header'
 import ImagePicker from 'react-native-image-picker';
 import renderItem  from '../components/ListView/OrderItem'
@@ -32,10 +32,18 @@ const ShoppingCart = () => {
   const handleShowModal = (item) => {
     setId(item.Id)
     console.log(`view  ${ item.Id }`)
-    // setModalVisible(true);
+    setModalVisible(true);
     
   };
-
+  const showToast = (message) => {
+    ToastAndroid.showWithGravityAndOffset(
+      message,
+      ToastAndroid.LONG, // Toast duration (can also use SHORT)
+      ToastAndroid.BOTTOM, // Toast position (can also use TOP or CENTER)
+      25, // X offset
+      50 // Y offset
+    );
+  };
   const handleClickPostMenu = () =>{
     let foodObj = {
         id:Math.random().toString(36).substr(2, 9),
@@ -49,6 +57,8 @@ const ShoppingCart = () => {
       axios.post("https://json-server-vercel-w33n.vercel.app/Menus",foodObj)
       .then((response) => {
         // console.log(response.data.length)
+        setMealName("")
+        showToast("成功")
         handleClickGetMenu()
       })
       .catch((error) => {
@@ -88,7 +98,7 @@ const ShoppingCart = () => {
       <TouchableOpacity >
       <View 
       style={styles.menuItem}  
-      onPress={handleShowModal(item)}
+      onPress={()=>handleShowModal(item)}
       
       >
         {item.image ? (
@@ -111,12 +121,12 @@ const ShoppingCart = () => {
     );
   };
 
-  // 数据示例（假设购物车项是一个对象数组）
+ 
   cartItems = [
   ];
   useEffect(()=>{
     handleClickGetMenu()
-  },[menuItems])
+  },[])
 
   return (
    <View style={{ flex: 1 ,flexDirection:'column'   }}>
@@ -173,28 +183,28 @@ const ShoppingCart = () => {
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
            <ScrollView style={{width:'90%',}}>
-              <Text >餐點名稱</Text>
+              <Text style={{color:'#000',fontWeight:"900"}}>餐點名稱</Text>
               <TextInput
-        
+             
               value={mealName}
               onChangeText={(text) => setMealName(text)}
-              style={{borderWidth:1,borderRadius:5,width:'90%'}}
+              style={{color:'#000',borderWidth:1,borderRadius:5,width:'90%'}}
               />
 
-              <Text   >原價</Text>
+              <Text  style={{color:'#000',fontWeight:"900"}} >原價</Text>
               <TextInput
               value={price}
               onChangeText={(text) => setPrice(text)}
               style={{borderWidth:1,borderRadius:5,width:'90%'}}
               />     
               
-              <Text  >特價</Text>
+              <Text style={{color:'#000',fontWeight:"900"}} >特價</Text>
               <TextInput 
                value={OriginPrice}
                onChangeText={(text) => setOriginPrice(text)}
-              style={{borderWidth:1,borderRadius:5,width:'90%'}}
+              style={{color:'#000',borderWidth:1,borderRadius:5,width:'90%'}}
               />
-              <Text  >庫存</Text>
+              <Text style={{color:'#000',fontWeight:"900"}} >庫存</Text>
               <View style={{flex:1,flexDirection:'row',justifyContent:'center',alignItems:'center'}}>
                 <View style={{flex:.1,backgroundColor:'gray'}}>
 
@@ -219,7 +229,7 @@ const ShoppingCart = () => {
                
 
                <View>
-                  <Text  >描述</Text>
+                  <Text style={{color:'#000',fontWeight:"900"}} >描述</Text>
                      <TextInput
                       onChangeText={(text) => setDescriptionText(text)}
                   style={styles.textarea}
@@ -233,7 +243,7 @@ const ShoppingCart = () => {
 
 
                <View>
-                <Text  >是否上架</Text>
+                <Text style={{color:'#000',fontWeight:"900"}}  >是否上架</Text>
 
 
                 <Switch
@@ -245,14 +255,14 @@ const ShoppingCart = () => {
                 />
                
                </View>
-                <Text>餐點圖片</Text>
+                <Text style={{color:'#000',fontWeight:"900"}}>餐點圖片</Text>
                 {selectedImage && <Image source={selectedImage} style={styles.image} />}
 
                 <TouchableOpacity 
                 style={{backgroundColor:'white',borderWidth:1, borderRadius:5, borderColor:'orange'}}
                 
                 >
-                <Text>選擇圖片</Text>
+                <Text style={{color:'#000',fontWeight:"900"}}>選擇圖片</Text>
                 </TouchableOpacity>
 
 
@@ -424,6 +434,7 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 18,
     fontWeight: 'bold',
+    color:'black'
   },
   itemDescription: {
     marginTop: 5,
@@ -439,6 +450,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textDecorationLine: 'line-through',
     marginRight: 10,
+    color:'black'
   },
   currentPrice: {
     fontSize: 16,

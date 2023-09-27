@@ -51,13 +51,13 @@ const MyOrderProgress = () => {
       style={[styles.feedbackItem, { borderRadius: 5, borderWidth: 1, borderColor: '#ccc', margin: 2 }]}
     >
       <View style={styles.feedbackInfo}>
-        <Text>{item.Name}</Text>
+        <Text style={{color:'black',fontWeight:"900"}}>{item.Name}</Text>
         <View style={styles.ratingContainer}>
           {[1, 2, 3, 4, 5].map((star) => (
             <Text key={star} style={[styles.star, star <= item.Star ? styles.filledStar : null]}>★</Text>
           ))}
         </View>
-        <Text>{item.Message}</Text>
+        <Text style={{color:"#ccc"}}>{item.Message}</Text>
       </View>
        {/**
       

@@ -106,7 +106,7 @@ const Order = () => {
           
             </View>
 
-            <View style={{flex:.7}}>
+            <View style={{flex:.87, }}>
              
                 <FlatList
                   data={orders}
@@ -117,28 +117,7 @@ const Order = () => {
             
             </View>
 
-            <View style={{flex:.1 ,flexDirection:'row',justifyContent:'center',alignItems:'center'}}
-            >
-
             
-
-              <View style={{flex:.2}}>
-
-               
-              </View>
-              <View style={{flex:.6}} >
- 
-              </View>
-              <View style={{flex:.2}}>
-
-
-              </View>
- 
-
-
-               
-            
-            </View>
          
      
         </View>         
@@ -264,6 +243,7 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 18,
     fontWeight: 'bold',
+    color:'black'
   },
   orderTime: {
     marginTop: 5,
