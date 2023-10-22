@@ -1,19 +1,24 @@
 import React, { useState,useEffect } from 'react'
-import {Text,View, TouchableOpacity , Modal ,  Switch,   StyleSheet ,Image  ,TextInput, ToastAndroid ,FlatList} from 'react-native'
+import {Text,View, TouchableOpacity , Modal , Alert, Switch,RefreshControl ,ActivityIndicator ,   StyleSheet ,Image  ,TextInput, ToastAndroid ,FlatList} from 'react-native'
 import _Header from '../components/_header'
 import ImagePicker from 'react-native-image-picker';
 import renderItem  from '../components/ListView/OrderItem'
 import Category from '../components/MenuItem'
 import code from '../assets/code.jpg'
 import { ScrollView } from 'react-native'
-import axios from 'axios';
+import axios from 'axios';  
 
 const ShoppingCart = () => {
+
+  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
   const [Id,setId] = useState("");
   const [mealName,setMealName] = useState("");
   const [price,setPrice] = useState(0);
   const [OriginPrice,setOriginPrice] = useState(0);
-  const [stockCount,setStockCount] = useState(0)
+  const [stockCount,setStockCount] = useState(1)
   const [IsAvailable,setIsAvailable] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null);
   let [cartItems, setCartItems] = useState([]); // 用于存储购物车项的状态
@@ -24,14 +29,17 @@ const ShoppingCart = () => {
 
     // 其他菜单项
   ]);
-
+  const onRefresh = () => {
+    setRefreshing(true); // 启动刷新
+    handleClickGetMenu(); // 获取新数据
+  };
   const toggleSwitch = () => {
     setIsMealSold(!isMealSold); // 切换状态
   };
   const [modalVisible, setModalVisible] = useState(false);
   const handleShowModal = (item) => {
     setId(item.Id)
-    console.log(`view  ${ item.Id }`)
+ 
     setModalVisible(true);
     
   };
@@ -44,6 +52,35 @@ const ShoppingCart = () => {
       50 // Y offset
     );
   };
+  const confirmDeleteMenu = (id) => {
+
+     console.log(`delete at ${id}`)
+    Alert.alert(
+      '刪除確認',
+      '您確定要删除餐點嗎？',
+      [
+        {
+          text: '取消',
+          style: 'cancel',
+        },
+        {
+          text: '確定',
+          onPress: () => {
+        
+
+               handleClickDeleteMenu(id)
+
+
+
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+
+
+
+  }
   const handleClickPostMenu = () =>{
     let foodObj = {
         id:Math.random().toString(36).substr(2, 9),
@@ -58,6 +95,8 @@ const ShoppingCart = () => {
       .then((response) => {
         // console.log(response.data.length)
         setMealName("")
+        setPrice(0)
+        setOriginPrice(0)
         showToast("成功")
         handleClickGetMenu()
       })
@@ -72,17 +111,18 @@ const ShoppingCart = () => {
       .then((response) => {
         console.log(response.data)
         setMenuItems(response.data)
-
+         setRefreshing(false); // 停止刷新
+          setIsLoading(false); 
 
       })
       .catch((error) => {
-   
+         setRefreshing(false); // 停止刷新
       });
   }
 
-  const handleClickDeleteMenu = () =>{
-    console.log(`delete at ${Id}`)
-      axios.delete(`https://json-server-vercel-w33n.vercel.app/Menus/${Id}`)
+  const handleClickDeleteMenu = (deleteId) =>{
+ 
+      axios.delete(`https://json-server-vercel-w33n.vercel.app/Menus/${deleteId}`)
       .then((response) => {
         console.log(response.data)
         handleClickGetMenu()
@@ -110,8 +150,42 @@ const ShoppingCart = () => {
           <Text style={styles.itemName}>{item?.foodName}</Text>
           <Text style={styles.itemDescription}>{item?.description}</Text>
           <View style={styles.priceContainer}>
-            <Text style={styles.originalPrice}>${item?.OriginPrice}</Text>
-            <Text style={styles.currentPrice}>${item?.foodPrice}</Text>
+            <View>
+              <Text style={styles.originalPrice}>${item?.OriginPrice}</Text>
+              <Text style={styles.currentPrice}>${item?.foodPrice}</Text>            
+            
+            </View>
+            <View>
+                  
+            </View>
+
+            <View>
+                  
+            </View>
+
+
+
+            <View>
+              <TouchableOpacity
+              onPress={()=>{
+                confirmDeleteMenu(item.id)
+              }}
+              >
+                <Text style={{color:'blue',fontWeight:'900'}}  > 修改</Text>
+              </TouchableOpacity>            
+            </View>
+
+
+            <View>
+              <TouchableOpacity
+              onPress={()=>{
+                confirmDeleteMenu(item.id)
+              }}
+              >
+                <Text style={{color:'red',fontWeight:'900'}}  > 刪除</Text>
+              </TouchableOpacity>            
+            </View>
+
           </View>
         </View>
       </View>      
@@ -149,6 +223,13 @@ const ShoppingCart = () => {
                 data={menuItems}
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                  />
+                }
+
               />
 
         
@@ -195,7 +276,7 @@ const ShoppingCart = () => {
               <TextInput
               value={price}
               onChangeText={(text) => setPrice(text)}
-              style={{borderWidth:1,borderRadius:5,width:'90%'}}
+              style={{color:'#000',borderWidth:1,borderRadius:5,width:'90%'}}
               />     
               
               <Text style={{color:'#000',fontWeight:"900"}} >特價</Text>
@@ -211,15 +292,25 @@ const ShoppingCart = () => {
 
                 </View>
                 <View style={{flex:.3,backgroundColor:'orange',justifyContent:'center',alignItems:'center',borderRadius:15}}>
-                     <TouchableOpacity style={{backgroundColor:'orange',  }}>
+                     <TouchableOpacity 
+                     onPress={() =>  {
+                         if(stockCount<0) return
+                          setStockCount(stockCount - 1);
+                     }}
+                     style={{backgroundColor:'orange',  }}>
                        <Text style={{color:'black',fontSize:18,color:'white',fontWeight:'900'}}>-</Text>
                      </TouchableOpacity>
                 </View>                
                 <View style={{flex:.5,justifyContent:'center',alignItems:'center'}}>
-                  <Text style={{fontWeight:'900',fontSize:20}}>1</Text>
+                  <Text style={{fontWeight:'900',fontSize:20,color:'black'}}>{stockCount}</Text>
                 </View>
                 <View style={{flex:.3,backgroundColor:'orange',justifyContent:'center',alignItems:'center',borderRadius:15}}>
-                     <TouchableOpacity style={{backgroundColor:'orange',  }}>
+                     <TouchableOpacity 
+                     onPress={() =>  {
+                       
+                          setStockCount(stockCount + 1);
+                     }}
+                     style={{backgroundColor:'orange',  }}>
                        <Text style={{color:'black',fontSize:18,color:'white',fontWeight:'900'}}>+</Text>
                      </TouchableOpacity>
                 </View>                
@@ -442,9 +533,12 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   priceContainer: {
+    width:"98%",
     flexDirection: 'row',
     marginTop: 10,
     alignItems: 'center',
+    justifyContent:'space-between',
+   
   },
   originalPrice: {
     fontSize: 16,

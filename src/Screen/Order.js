@@ -1,5 +1,5 @@
 import React, { useState,useEffect } from 'react'
-import {View,Text, FlatList,Modal,StyleSheet,Image,TouchableOpacity, Alert,ProgressBarAndroid} from 'react-native'
+import {View,Text, FlatList,Modal,StyleSheet,Image,TouchableOpacity, Alert,RefreshControl ,ActivityIndicator  ,ProgressBarAndroid} from 'react-native'
 import _Header from '../components/_header'
 import Category from '../components/Category'
 import BreakfastCategory  from '../components/BreakfastCategory'
@@ -9,48 +9,77 @@ import ProgressCircle from '../components/ProgressCircle';
 import * as Progress from 'react-native-progress';
 import CustomLoader from '../components/CustomLoader';
 import axios from 'axios';
- import burger1 from '../assets/burger1.jpg'
-   import cookie from '../assets/egg1.jpg';
-const Order = () => {
-    const [loading, setLoading] = useState(false);
-    const [progress, setProgress] = useState(0);
+import burger1 from '../assets/burger1.jpg'
+import cookie from '../assets/egg1.jpg';
+import { RNCamera, useCameraDevices } from 'react-native-vision-camera';
 
- const [selectedOrder, setSelectedOrder] = useState(null);
-    const orderProgress = 0.5; // 0表示刚开始，1表示完成
-    const [allMenu,setAllMenu] = useState(false);
-    const [modalVisible, setModalVisible] = useState(false);
-    const [showCatrgory,setShowCatrgory] = useState(false);
-   
+import { Camera } from 'react-native-vision-camera';
+import { request, PERMISSIONS } from 'react-native-permissions';
+
+
+
+
+
+
+
+
+
+
+
+
+
+const Order = () => {
+
+// const devices = useCameraDevices();
+// const device = devices.back;
+const [isCameraVisible, setIsCameraVisible] = useState(false);
+const [scannedData, setScannedData] = useState(null);
+const handleScanButtonPress = async () => {
+  const cameraPermission = await request(PERMISSIONS.ANDROID.CAMERA);
+  if (cameraPermission === 'granted') {
+     console.log(" Have permission")  
+    // setIsCameraVisible(true);
+  } else {
+    // Handle permission denied
+    console.log("NO permission")
+  }
+};
+
+  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const orderProgress = 0.5; // 0表示刚开始，1表示完成
+  const [allMenu,setAllMenu] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [showCatrgory,setShowCatrgory] = useState(false);
+  const onRefresh = () => {
+    setRefreshing(true); 
+    handleClickGetMenu();
+  };
 
   const handleOrderPress = (order) => {
     setSelectedOrder(order);
     setModalVisible(true);
   };
   const handleConfirmOrder = () => {
-    // 在这里执行确认制单中的逻辑
-    // 可以向后端发送请求以更新订单状态等
-    // 然后关闭模态框
+
     setModalVisible(false);
   };
   const handleClickGetMenu = () =>{
+    
       axios.get("https://json-server-vercel-w33n.vercel.app/Orders")
       .then((response) => {
         console.log(response.data)
         setOrders(response.data)
-        
-
-
-
-
-
+         setRefreshing(false); // 停止刷新
+          setIsLoading(false); 
       })
       .catch((error) => {
-   
+            setRefreshing(false); // 停止刷新
       });
   }
-
-
-
 
   const closeModal = () => {
     setModalVisible(false);
@@ -59,7 +88,7 @@ const Order = () => {
     let menu  = [
   
     ]
-
+  
     const [orders, setOrders] = useState([
 
     ]);
@@ -84,12 +113,16 @@ const Order = () => {
     };
 
 
-
-    menu = menuData
-    console.log(menuData); 
+  const checkPermission = async () => {
+    const newCameraPermission = await Camera.requestCameraPermission();
+    const newMicrophonePermission = await Camera.requestCameraPermission();
+    console.log(newCameraPermission)
+  }
+  
   useEffect(() => {
+    checkPermission()
     handleClickGetMenu()
-  }, [loading, progress]);
+  }, []);
  
 
 
@@ -108,15 +141,69 @@ const Order = () => {
 
             <View style={{flex:.87, }}>
              
-                <FlatList
-                  data={orders}
-                  renderItem={renderItem}
-                  keyExtractor={(item) => item.id}
-                />
-                      
+            
+                
+                    {isLoading ? (  
+                      <ActivityIndicator size="large" color="orange" style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
+                    ) : (
+                      <FlatList
+                        data={orders}
+                        renderItem={renderItem}
+                        keyExtractor={(item) => item.id.toString()}
+                        refreshControl={
+                          <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                          />
+                        }
+
+                      />
+                    )}
+
+
+
+
+
+
             
             </View>
+            <View style={{flex:.1 , flexDirection:'column',  }}>
 
+                <TouchableOpacity 
+                onPress={handleScanButtonPress}
+                  style={{ flex:1,borderRadius:5, justifyContent:'center',alignItems:'center', backgroundColor:'orange'}}
+                >
+                  <Text style={{color:'#fff', fontWeight:'900', fontSize:18}}>掃描餐點</Text>
+                </TouchableOpacity>
+    {/* Camera View */}
+
+
+    
+     
+    
+    {isCameraVisible && (
+
+       
+      <View style={{ flex: 1 }}>
+        <Camera
+          style={{ flex: 1 }}
+     
+         // You may not need audio capture for QR code scanning
+        />
+      </View>
+    )}
+
+    {/* Display the scanned data */}
+    {scannedData && (
+      <View>
+        <Text>Scanned QR Code Data:</Text>
+        <Text>{scannedData}</Text>
+      </View>
+    )}
+
+ 
+
+            </View>
             
          
      
@@ -125,37 +212,33 @@ const Order = () => {
  
       <Modal
         animationType="slide"
-        transparent={false}
+   
         visible={modalVisible}
       >
-             <View style={styles.modalContainer}>
-          <Image source={selectedOrder?.image} style={styles.modalImage} />
-          <Text style={styles.modalItemName}>{selectedOrder?.name}</Text>
-          <Text style={styles.modalItemDescription}>{selectedOrder?.description}</Text>
-          <TouchableOpacity style={styles.confirmButton} onPress={handleConfirmOrder}>
-            <Text style={styles.confirmButtonText}>確定製單中</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
-            <Text style={styles.closeButtonText}>關閉</Text>
-          </TouchableOpacity>
+      <View style={styles.modalContainer}>
+        <Text style={styles.modalTitle}>訂單詳情</Text>
+        <View style={styles.orderDetails}>
+          <Text style={styles.orderItemName}>{selectedOrder?.name}</Text>
+          <Text style={styles.orderItemDescription}>{selectedOrder?.description}</Text>
         </View>
+        <View style={styles.separator} />
+        <View style={styles.totalContainer}>
+          <Text style={styles.totalText}>總計金額:</Text>
+          <Text style={styles.totalAmount}>$ {selectedOrder?.totalAmount}</Text>
+        </View>
+        <TouchableOpacity style={styles.confirmButton} onPress={handleConfirmOrder}>
+          <Text style={styles.confirmButtonText}>確認訂單</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+          <Text style={styles.closeButtonText}>關閉</Text>
+        </TouchableOpacity>
+      </View>
       
       
       
       </Modal>
   
-
-
  
-
-
-
-
-
-
-
-
-
 
 
     </View>
@@ -175,32 +258,68 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
   },
-  modalContainer: {
-    backgroundColor: 'white',
+   modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: 5,
+    backgroundColor: 'white',
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  orderDetails: {
+    marginBottom: 10,
+  },
+  orderItemName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  orderItemDescription: {
+    fontSize: 16,
+  },
+  separator: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'black',
+    marginVertical: 10,
+  },
+  totalContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  totalText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  totalAmount: {
+    fontSize: 18,
+  },
+  confirmButton: {
+    backgroundColor: 'green',
+    padding: 10,
     borderRadius: 5,
+    marginBottom: 10,
+  },
+  confirmButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   closeButton: {
-    marginTop: 10,
-    backgroundColor: 'orange',
-    fontSize: 16,
-  },  
-
-  modalView: {
-    margin: 15,
-    backgroundColor: 'white',
-    borderRadius: 5,
+    backgroundColor: 'red',
     padding: 10,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   button: {
     borderRadius: 5,
