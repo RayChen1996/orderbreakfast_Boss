@@ -2,7 +2,7 @@ import React from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 
-import OrderPage from './Order';
+import OrderPage from './OrderScreen';
 import ShoppingCart from './ShoppingCart';
 import Login from './Login';
 import OrderManage from './MyOrderProgress';
@@ -20,25 +20,26 @@ const Home = () => {
         activeColor="orange" // 在这里设置选中选项卡的颜色
         barStyle={{backgroundColor: 'white'}}>
         <Tab.Screen
-          options={{
-            headerShown: false,
-            tabBarLabel: '接單管理',
-            tabBarIcon: ({color, size}) => (
-              <Icon name="home" size={size} color={color} />
-            ),
-            unmountOnBlur: true,
-          }}
           name="接單管理"
           component={OrderPage}
+          options={{
+            headerShown: false,
+            tabBarActiveTintColor: 'orange',
+            tabBarIcon: ({color, size}) => (
+              <Icon name="home" size={40} color={'orange'} />
+            ),
+          }}
         />
+
         <Tab.Screen
           name="餐點管理"
           component={ShoppingCart}
           options={{
             headerShown: false,
             tabBarLabel: '餐點管理',
+            tabBarActiveTintColor: 'orange',
             tabBarIcon: ({color, size}) => (
-              <Icon name="cutlery" size={size} color={color} />
+              <Icon name="cutlery" size={40} color={'orange'} />
             ),
             unmountOnBlur: true,
           }}
@@ -49,8 +50,9 @@ const Home = () => {
           options={{
             tabBarLabel: '顧客Q&A',
             headerShown: false,
+            tabBarActiveTintColor: 'orange',
             tabBarIcon: ({color, size}) => (
-              <Icon name="question" size={size} color={color} />
+              <Icon name="question" size={40} color={'orange'} />
             ),
             unmountOnBlur: true,
           }}
